@@ -71,7 +71,14 @@ async function fastifyOpenapiGlue(instance, opts) {
       }
       if (service[item.operationId]) {
         routesInstance.log.debug("service has", item.operationId);
-        item.handler = service[item.operationId];
+        const handler = service[item.operationId];
+        if (typeof handler.handler === "function") {
+          delete handler.method; // don't override important properties
+          delete handler.url; // don't override important properties
+          Object.assign(item, handler);
+        } else {
+          item.handler = handler;
+        }
       } else {
         item.handler = async (request, reply) => {
           throw new Error(`Operation ${item.operationId} not implemented`);
